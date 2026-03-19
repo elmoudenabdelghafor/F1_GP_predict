@@ -230,18 +230,3 @@ python f1_models.py
 | joblib | bundled | Model and data serialisation |
 
 ---
-
-## Academic Context
-
-> **Course:** Systèmes et Usages du Numérique — INE2 2026
-> **Supervisor:** Pr. EL ASRI Ikram
-> **Institution:** INPT — Institut National des Postes et Télécommunications, Rabat
-> **Deliverable:** 10-minute oral presentation
-
----
-
-## Author
-
-**Abdelghafor El Moudena**
-Student at INPT · Member of CIT (Club Informatique et Télécom)
-[github.com/elmoudenabdelghafor](https://github.com/elmoudenabdelghafor)
