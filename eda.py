@@ -1,5 +1,5 @@
 import os
-import pickle
+import joblib
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,29 +7,30 @@ import matplotlib.ticker as mticker
 import seaborn as sns
 
 # ==============================================================================
-# LOAD — reads everything saved by f1_data_pipeline.py from disk
+# LOAD — reads everything saved by f1_data_pipeline.py
 # Run f1_data_pipeline.py first (only once), then this file runs independently
 # ==============================================================================
 
-SAVE_DIR = 'f1_pipeline_outputs'
+SAVE_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'f1_pipeline_outputs')
+SAVE_PATH = os.path.join(SAVE_DIR, 'f1_pipeline.joblib')
 
-if not os.path.exists(SAVE_DIR):
+if not os.path.exists(SAVE_PATH):
     raise FileNotFoundError(
-        f"'{SAVE_DIR}/' not found. Run f1_data_pipeline.py first to generate it."
+        f"'{SAVE_PATH}' not found. Run f1_data_pipeline.py first to generate it."
     )
 
-df           = pd.read_parquet(os.path.join(SAVE_DIR, 'df_prepared.parquet'))
-X_train      = pd.read_parquet(os.path.join(SAVE_DIR, 'X_train.parquet'))
-X_test       = pd.read_parquet(os.path.join(SAVE_DIR, 'X_test.parquet'))
-y_train      = pd.read_parquet(os.path.join(SAVE_DIR, 'y_train.parquet')).squeeze()
-y_test       = pd.read_parquet(os.path.join(SAVE_DIR, 'y_test.parquet')).squeeze()
-X_train_res  = pd.read_parquet(os.path.join(SAVE_DIR, 'X_train_smote.parquet'))
-y_train_res  = pd.read_parquet(os.path.join(SAVE_DIR, 'y_train_smote.parquet')).squeeze()
+data = joblib.load(SAVE_PATH)
 
-with open(os.path.join(SAVE_DIR, 'label_encoders.pkl'), 'rb') as f:
-    label_encoders = pickle.load(f)
+df            = data['df']
+X_train       = data['X_train']
+X_test        = data['X_test']
+y_train       = data['y_train']
+y_test        = data['y_test']
+X_train_res   = data['X_train_smote']
+y_train_res   = data['y_train_smote']
+label_encoders = data['label_encoders']
 
-print("Loaded from disk:")
+print("Loaded successfully:")
 print(f"  df           : {df.shape}")
 print(f"  X_train      : {X_train.shape}  |  y_train : {y_train.shape}")
 print(f"  X_test       : {X_test.shape}   |  y_test  : {y_test.shape}")
@@ -60,7 +61,8 @@ TEAL   = '#00c9a7'
 PURPLE = '#9b59b6'
 BLUE   = '#3498db'
 
-OUTPUT_DIR = 'eda_plots'
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'eda_plots')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ==============================================================================

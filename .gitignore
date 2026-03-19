@@ -1,5 +1,7 @@
-.venv/
-eda_plots/
+# Generated outputs — not committed
 f1_pipeline_outputs/
+model_plots/
+eda_plots/
 __pycache__/
+.venv/
 *.pyc
