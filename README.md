@@ -134,7 +134,6 @@ f1_data_pipeline.py
 | Precision | 0.4762 | 0.4948 |
 | Recall | 0.5882 | 0.7059 |
 
-*Run `f1_models.py` to populate this table with your actual results.*
 
 ### Feature importance (expected top 5)
 
