@@ -41,14 +41,14 @@ The core idea is to predict race winners using only information available **befo
 
 The dataset consists of 14 CSV files. Six are used in this project:
 
-| File | Role |
-|---|---|
-| `qualifying.csv` | Q1/Q2/Q3 lap times — core feature source |
-| `results.csv` | Race outcome and confirmed grid position |
-| `races.csv` | Season year, round number, circuit, date |
-| `circuits.csv` | Track identity and altitude |
-| `constructors.csv` | Team identity |
-| `drivers.csv` | Driver identity for historical features |
+| File               | Role                                     |
+| ------------------ | ---------------------------------------- |
+| `qualifying.csv`   | Q1/Q2/Q3 lap times — core feature source |
+| `results.csv`      | Race outcome and confirmed grid position |
+| `races.csv`        | Season year, round number, circuit, date |
+| `circuits.csv`     | Track identity and altitude              |
+| `constructors.csv` | Team identity                            |
+| `drivers.csv`      | Driver identity for historical features  |
 
 Files such as `lap_times.csv` and `pit_stops.csv` are excluded — they contain race-time data and would cause data leakage.
 
@@ -127,23 +127,22 @@ f1_data_pipeline.py
 
 > Results below are indicative — actual values depend on the best hyperparameters found during the randomised search.
 
-| Metric | Random Forest | XGBoost |
-|---|---|---|
-| F1-score (winner class) | 0.5263 | 0.5818 |
-| ROC-AUC | 0.9439 | 0.9343 |
-| Precision | 0.4762 | 0.4948 |
-| Recall | 0.5882 | 0.7059 |
-
+| Metric                  | Random Forest | XGBoost |
+| ----------------------- | ------------- | ------- |
+| F1-score (winner class) | 0.5263        | 0.5818  |
+| ROC-AUC                 | 0.9439        | 0.9343  |
+| Precision               | 0.4762        | 0.4948  |
+| Recall                  | 0.5882        | 0.7059  |
 
 ### Feature importance (expected top 5)
 
-| Rank | Feature | Type |
-|---|---|---|
-| 1 | is_pole | Engineered binary |
-| 2 | is_front_row | Engineered binary |
-| 3 | position | Raw qualifying rank |
-| 4 | constructor_win_rate_20 | Engineered historical |
-| 5 | driver_win_rate_all | Engineered historical |
+| Rank | Feature                 | Type                  |
+| ---- | ----------------------- | --------------------- |
+| 1    | is_pole                 | Engineered binary     |
+| 2    | is_front_row            | Engineered binary     |
+| 3    | position                | Raw qualifying rank   |
+| 4    | constructor_win_rate_20 | Engineered historical |
+| 5    | driver_win_rate_all     | Engineered historical |
 
 ---
 
@@ -169,28 +168,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### requirements.txt
-
-```
-kagglehub
-pandas
-numpy
-scikit-learn
-imbalanced-learn
-xgboost
-matplotlib
-seaborn
-joblib
-```
-
-**Kaggle credentials:** the pipeline downloads the dataset automatically via `kagglehub`. Make sure your Kaggle API key is configured:
-
-```bash
-# Place your kaggle.json in:
-# Windows:  C:\Users\<you>\.kaggle\kaggle.json
-# macOS/Linux: ~/.kaggle/kaggle.json
-```
-
 Get your API key from [kaggle.com/settings](https://www.kaggle.com/settings) → API → Create New Token.
 
 ---
@@ -201,31 +178,29 @@ The three scripts are independent after the first run of the pipeline.
 
 ```bash
 # Step 1 — run once to prepare data and save to disk (~30 seconds)
-python f1_data_pipeline.py
+python data.py
 
 # Step 2 — exploratory analysis, generates eda_plots/
-python f1_eda.py
+python eda.py
 
 # Step 3 — train models, evaluate, generates model_plots/  (~5–10 minutes)
-python f1_models.py
+python models.py
 ```
 
-> **Note:** `f1_eda.py` and `f1_models.py` both load from `f1_pipeline_outputs/f1_pipeline.joblib`. Run `f1_data_pipeline.py` first, then either script can be run in any order, any number of times, without re-running the pipeline.
+> **Note:** `eda.py` and `models.py` both load from `f1_pipeline_outputs/f1_pipeline.joblib`. Run `data.py` first, then either script can be run in any order, any number of times, without re-running the pipeline.
 
 ---
 
 ## Tech Stack
 
-| Library | Version | Purpose |
-|---|---|---|
-| pandas | ≥ 2.0 | Data manipulation and merging |
-| numpy | ≥ 1.24 | Numerical operations |
-| scikit-learn | ≥ 1.3 | Random Forest, preprocessing, metrics |
-| xgboost | ≥ 2.0 | XGBoost classifier |
-| imbalanced-learn | ≥ 0.11 | SMOTE oversampling |
-| matplotlib | ≥ 3.7 | Plotting |
-| seaborn | ≥ 0.12 | Statistical visualisations |
-| kagglehub | latest | Automatic dataset download |
-| joblib | bundled | Model and data serialisation |
-
-
+| Library          | Version | Purpose                               |
+| ---------------- | ------- | ------------------------------------- |
+| pandas           | ≥ 2.0   | Data manipulation and merging         |
+| numpy            | ≥ 1.24  | Numerical operations                  |
+| scikit-learn     | ≥ 1.3   | Random Forest, preprocessing, metrics |
+| xgboost          | ≥ 2.0   | XGBoost classifier                    |
+| imbalanced-learn | ≥ 0.11  | SMOTE oversampling                    |
+| matplotlib       | ≥ 3.7   | Plotting                              |
+| seaborn          | ≥ 0.12  | Statistical visualisations            |
+| kagglehub        | latest  | Automatic dataset download            |
+| joblib           | bundled | Model and data serialisation          |
