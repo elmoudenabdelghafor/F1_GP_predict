@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import matplotlib.colors as mcolors
 import seaborn as sns
 
 from sklearn.ensemble import RandomForestClassifier
@@ -101,18 +102,49 @@ def evaluate(name, model, X_te, y_te, color, results_store):
     print(f"  Recall    : {rec:.4f}")
     print(f"\n{classification_report(y_te, y_pred, target_names=['Non-winner','Winner'])}")
 
-    # Confusion matrix plot
-    fig, ax = plt.subplots(figsize=(5, 4))
+    # ---------- Confusion matrix plot (enhanced) ----------
+    class_labels = ['Non-winner', 'Winner']
+    cm_total = cm.sum()
+    cm_pct = cm / cm_total * 100
+    accuracy = np.trace(cm) / cm_total * 100
+
+    # Build annotation strings: count + percentage
+    annot_text = np.empty_like(cm, dtype=object)
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            annot_text[i, j] = f"{cm[i, j]}\n({cm_pct[i, j]:.1f}%)"
+
+    # Custom dark colormap matching the model colour
+    cmap_cm = mcolors.LinearSegmentedColormap.from_list(
+        'custom', ['#1a1a2e', color], N=256
+    )
+
+    fig, ax = plt.subplots(figsize=(6.5, 5.5))
     fig.patch.set_facecolor('#0f0f0f')
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                xticklabels=['Pred 0', 'Pred 1'],
-                yticklabels=['True 0', 'True 1'],
-                linewidths=0.5, linecolor='#0f0f0f',
-                annot_kws={'size': 13}, ax=ax)
-    ax.set_title(f'Confusion matrix — {name}', pad=10)
-    plt.tight_layout()
+
+    sns.heatmap(
+        cm, annot=annot_text, fmt='', cmap=cmap_cm,
+        xticklabels=class_labels, yticklabels=class_labels,
+        linewidths=2, linecolor='#0f0f0f',
+        annot_kws={'size': 14, 'weight': 'bold', 'color': '#ffffff'},
+        cbar=False, ax=ax,
+    )
+
+    ax.set_xlabel('Predicted Label', fontsize=12, labelpad=10)
+    ax.set_ylabel('True Label', fontsize=12, labelpad=10)
+    ax.set_title(f'Confusion Matrix — {name}', fontsize=14, pad=14, weight='bold')
+    ax.tick_params(axis='both', labelsize=11)
+
+    # Accuracy footer
+    fig.text(
+        0.5, 0.01, f'Overall Accuracy: {accuracy:.1f}%',
+        ha='center', fontsize=11, style='italic',
+        color=color, weight='bold',
+    )
+
+    plt.tight_layout(rect=[0, 0.04, 1, 1])
     safe = name.replace(' ', '_').lower()
-    plt.savefig(f'{OUTPUT_DIR}/cm_{safe}.png', dpi=150,
+    plt.savefig(f'{OUTPUT_DIR}/cm_{safe}.png', dpi=180,
                 bbox_inches='tight', facecolor=fig.get_facecolor())
     plt.show()
     print(f"Saved: cm_{safe}.png")
@@ -347,6 +379,64 @@ print(summary.to_string(index=False))
 winner_model = 'XGBoost' if results['XGBoost']['f1'] >= results['Random Forest']['f1'] \
                else 'Random Forest'
 print(f"\nBest model by F1-score: {winner_model}")
+
+# ---------- Export summary table as styled plot ----------
+
+# Build the table data (header + metric rows + best-model footer)
+col_labels = ['Metric', 'Random Forest', 'XGBoost']
+cell_data  = [[m, rf, xg] for m, rf, xg in
+              zip(metric_labels,
+                  [f'{v:.4f}' for v in rf_vals],
+                  [f'{v:.4f}' for v in xgb_vals])]
+cell_data.append(['Best Model (F1)', winner_model, ''])
+
+fig, ax = plt.subplots(figsize=(8, 3.5))
+fig.patch.set_facecolor('#0f0f0f')
+ax.set_facecolor('#0f0f0f')
+ax.axis('off')
+ax.set_title('Final Comparison Summary',
+             fontsize=16, weight='bold', color='#ffffff', pad=18)
+
+table = ax.table(
+    cellText=cell_data,
+    colLabels=col_labels,
+    cellLoc='center',
+    loc='center',
+)
+table.auto_set_font_size(False)
+table.set_fontsize(12)
+table.scale(1, 1.6)
+
+# Determine which column index is the winner (1 = RF, 2 = XGB)
+winner_col = 1 if winner_model == 'Random Forest' else 2
+winner_color = GOLD if winner_model == 'Random Forest' else TEAL
+
+for (row, col), cell in table.get_celld().items():
+    cell.set_edgecolor('#444466')
+    cell.set_linewidth(0.8)
+
+    if row == 0:  # header row
+        cell.set_facecolor(RED)
+        cell.set_text_props(color='#ffffff', weight='bold', fontsize=12)
+        cell.set_height(0.12)
+    elif row == len(cell_data):  # best-model footer
+        cell.set_facecolor('#2a2a4a')
+        cell.set_text_props(color=winner_color, weight='bold', fontsize=12)
+    else:  # data rows — alternating colours
+        bg = '#1a1a2e' if row % 2 == 1 else '#222244'
+        cell.set_facecolor(bg)
+        cell.set_text_props(color='#ccccdd', fontsize=11)
+
+        # Highlight the winning model's column cells
+        if col == winner_col:
+            cell.set_text_props(color=winner_color, weight='bold', fontsize=11)
+
+plt.tight_layout()
+plt.savefig(f'{OUTPUT_DIR}/summary_table.png', dpi=180,
+            bbox_inches='tight', facecolor=fig.get_facecolor())
+plt.show()
+print("Saved: summary_table.png")
+
 print("\n--- Model building complete. Ready for Step 7 (Discussion). ---")
 
 print(f"\nAll outputs saved to:")
